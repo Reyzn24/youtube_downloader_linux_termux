@@ -114,6 +114,8 @@ class DownloaderConfig:
         self.default_audio_format = "mp3"
         self.default_video_format = "mp4"
         self.default_audio_quality = "320kb"
+        self.default_video_quality = "1080p"
+        self.auto_delete_temp = True
         self.max_concurrent_downloads = 1
         self.set_max_concurrent_downloads(self.max_concurrent_downloads)
         self.download_subtitles = True
@@ -143,6 +145,7 @@ class DownloaderConfig:
             'default_audio_format': 'mp3',
             'default_video_format': 'mp4',
             'default_audio_quality': '320kb',
+            'default_video_quality': '1080p',
             'auto_delete_temp': True,
             'download_subtitles': True,
             'subtitle_languages': ["en", "es"],
@@ -176,6 +179,7 @@ class DownloaderConfig:
             'default_audio_format': self.default_audio_format,
             'default_video_format': self.default_video_format,
             'default_audio_quality': self.default_audio_quality,
+            'default_video_quality': self.default_video_quality,
             'auto_delete_temp': self.auto_delete_temp,
             'download_subtitles': self.download_subtitles,
             'subtitle_languages': self.subtitle_languages,
@@ -288,7 +292,8 @@ class DownloaderConfig:
                 f"[bold {self.theme_color}]Configurações de Áudio e Vídeo[/]\n" +
                 f"[bold {self.theme_color}]Formato de Áudio: {self.default_audio_format} | " +
                 f"Formato de Vídeo: {self.default_video_format} | " +
-                f"Qualidade de Áudio: {self.default_audio_quality}[/]",
+                f"Qualidade de Áudio: {self.default_audio_quality} | " +
+                f"Qualidade de Vídeo: {self.default_video_quality}[/]",
                 border_style=self.theme_color
             ))
             choice = questionary.select(
@@ -297,6 +302,7 @@ class DownloaderConfig:
                     {"name": "Formato de Áudio Padrão", "value": "audio_format"},
                     {"name": "Formato de Vídeo Padrão", "value": "video_format"},
                     {"name": "Qualidade de Áudio", "value": "audio_quality"},
+                    {"name": "Qualidade de Vídeo", "value": "video_quality"},
                     {"name": "Voltar", "value": "back"}
                 ],
                 style=custom_style
@@ -467,6 +473,15 @@ class DownloaderConfig:
             ).ask()
             if quality_choice:
                 self.default_audio_quality = quality_choice
+        elif choice == "video_quality":
+            quality_choice = questionary.select(
+                f"Escolha a qualidade de vídeo padrão (atualmente: {self.default_video_quality}):",
+                choices=["best", "1080p", "720p", "480p", "360p"],
+                default=self.default_video_quality,
+                style=custom_style
+            ).ask()
+            if quality_choice:
+                self.default_video_quality = quality_choice
         elif choice == "auto_delete":
             status = "ON" if self.auto_delete_temp else "OFF"
             self.auto_delete_temp = questionary.select(
@@ -1104,6 +1119,26 @@ class Downloader:
             elif selected == "back":
                 break
 
+    def _get_video_format_config(self):
+        """
+        Retorna a configuração de formato de vídeo baseada na qualidade pré-configurada.
+        """
+        quality = self.config.default_video_quality
+        
+        if quality == "best":
+            return {"format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"}
+        elif quality == "1080p":
+            return {"format": "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]"}
+        elif quality == "720p":
+            return {"format": "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]"}
+        elif quality == "480p":
+            return {"format": "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]"}
+        elif quality == "360p":
+            return {"format": "bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/best[height<=360][ext=mp4]"}
+        else:
+            # Fallback para melhor qualidade se não reconhecer a configuração
+            return {"format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"}
+
     def select_format(self, format_type: str):
         while True:
             clear_screen()
@@ -1358,11 +1393,21 @@ class Downloader:
             else:
                 console.print("[red]Aviso: Cookies do TikTok são inválidos ou expiraram! Você pode não conseguir baixar vídeos privados.[/]")
             time.sleep(1)
-        audio_format = self.select_format("audio")
-        if audio_format is None:
-            return
+        
+        # Usar qualidade pré-configurada ao invés de mostrar seletor
+        audio_format = {
+            "format": self.config.default_audio_format,
+            "quality": self.config.default_audio_quality
+        }
+        
         clear_screen()
+        console.print(f"[{self.config.theme_color}]Usando configuração de áudio:[/] {audio_format['format'].upper()} - {audio_format['quality']}")
+        time.sleep(1)
+        
         if not self.is_valid_url(url):
+            console.print("[red]URL inválida! Retornando ao menu...[/]")
+            time.sleep(2)
+            return
             console.print("[red]URL inválida! Retornando ao menu...[/]")
             time.sleep(2)
             return
@@ -1422,11 +1467,18 @@ class Downloader:
             else:
                 console.print("[red]Aviso: Cookies do TikTok são inválidos ou expiraram! Você pode não conseguir baixar vídeos privados.[/]")
             time.sleep(1)
-        video_format = self.select_format("video")
-        if video_format is None:
-            return
+        
+        # Usar qualidade pré-configurada ao invés de mostrar seletor
+        video_format = self._get_video_format_config()
+        
         clear_screen()
+        console.print(f"[{self.config.theme_color}]Usando configuração de vídeo:[/] {self.config.default_video_quality}")
+        time.sleep(1)
+        
         if not self.is_valid_url(url):
+            console.print("[red]URL inválida! Retornando ao menu...[/]")
+            time.sleep(2)
+            return
             console.print("[red]URL inválida! Retornando ao menu...[/]")
             time.sleep(2)
             return
