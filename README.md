@@ -99,8 +99,8 @@ sudo dnf install python3 python3-pip git -y
 ### 2. Clonar Repositório
 ```bash
 # Clonar projeto
-git clone https://github.com/Reyzn24/youtube_downloader_termux.git
-cd youtube_downloader_termux
+git clone https://github.com/Reyzn24/youtube_downloader_linux_termux.git
+cd youtube_downloader_linux_termux
 
 # Tornar executável
 chmod +x beta1.py
@@ -682,8 +682,8 @@ python --version  # ou python3 --version
 ### Ambiente de Desenvolvimento
 ```bash
 # Clonar repositório
-git clone https://github.com/Reyzn24/youtube_downloader_termux.git
-cd youtube_downloader_termux
+git clone https://github.com/Reyzn24/youtube_downloader_linux_termux.git
+cd youtube_downloader_linux_termux
 
 # Criar branch para feature
 git checkout -b feature/nova-funcionalidade
@@ -707,7 +707,7 @@ black beta1.py --diff
 ```
 
 ### Reportar Bugs
-- **Issues**: Use as [Issues do GitHub](https://github.com/Reyzn24/youtube_downloader_termux/issues)
+- **Issues**: Use as [Issues do GitHub](https://github.com/Reyzn24/youtube_downloader_linux_termux/issues)
 - **Logs**: Inclua conteúdo de `~/Yt-dlp/log.txt`
 - **Sistema**: Mencione distribuição Linux e versão Python
 - **Reprodução**: Descreva passos detalhados para reproduzir
@@ -804,7 +804,7 @@ SOFTWARE.
 
 **Reyzn24**
 - GitHub: [@Reyzn24](https://github.com/Reyzn24)
-- Projeto: [youtube_downloader_termux](https://github.com/Reyzn24/youtube_downloader_termux)
+- Projeto: [youtube_downloader_linux_termux](https://github.com/Reyzn24/youtube_downloader_linux_termux)
 
 ## 📈 Changelog
 
